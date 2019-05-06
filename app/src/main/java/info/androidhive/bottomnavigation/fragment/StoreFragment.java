@@ -92,27 +92,24 @@ public class StoreFragment extends Fragment {
         recyclerView.addItemDecoration(new GridSpacingItemDecoration(2, dpToPx(8), true));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(mAdapter);
-        recyclerView.setNestedScrollingEnabled(false);
+        recyclerView.setHasFixedSize(true);
+        //recyclerView.setNestedScrollingEnabled(false);
         //final GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 3);
 
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                if (dy > 0) {
-                    int visibleItemCount = mLayoutManager.getChildCount();
-                    int totalItemCount = mLayoutManager.getItemCount();
-                    int pastVisibleItems = mLayoutManager.findFirstVisibleItemPosition();
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+
+                if (!recyclerView.canScrollVertically(1)) {
 
                     if (aptoParaCargar) {
-                        if ((visibleItemCount + pastVisibleItems) >= totalItemCount) {
-                            Log.i(TAG, " Llegamos al final.");
 
-                            aptoParaCargar = false;
-                            NUMEROPAGINA += 1;
-                            fetchStoreItems(NUMEROPAGINA);
-                        }
+                        aptoParaCargar=false;
+                        NUMEROPAGINA++;
+                        fetchStoreItems(NUMEROPAGINA);
                     }
+
                 }
             }
         });
@@ -135,7 +132,7 @@ public class StoreFragment extends Fragment {
      * fetching shopping item by making http call
      */
     private void fetchStoreItems(int NUMEROPAGINA) {
-        itemsList.clear();
+        //itemsList.clear();
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET,
                 URL+NUMEROPAGINA, (String) null,
                 new Response.Listener<JSONObject>() {
