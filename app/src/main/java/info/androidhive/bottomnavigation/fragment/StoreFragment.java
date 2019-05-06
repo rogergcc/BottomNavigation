@@ -24,6 +24,9 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.Priority;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -43,15 +46,21 @@ public class StoreFragment extends Fragment {
     private static final String TAG = StoreFragment.class.getSimpleName();
 
     // url to fetch shopping items
-    private static final String URL = "https://api.androidhive.info/json/movies_2017.json";
+    private static final String URLHIVE = "https://api.androidhive.info/json/movies_2017.json";
 
-    private static final String URL2 = "https://api.themoviedb.org/3/account/{account_id}/favorite/movies?api_key=516adf1e1567058f8ecbf30bf2eb9378&session_id=c8e2bd462c246b141fd19ddba2e5f091f6f8aedb&language=en-US&sort_by=created_at.asc&page=1";
+    private String URLDOMINIO = "https://api.themoviedb.org/3/account/{account_id}/favorite/movies";
+    private String KEY = "?api_key=516adf1e1567058f8ecbf30bf2eb9378&session_id=c8e2bd462c246b141fd19ddba2e5f091f6f8aedb&language=en-US&sort_by=created_at.asc&page=1";
+    private String SESION_ID = "&session_id=c8e2bd462c246b141fd19ddba2e5f091f6f8aedb&language=en-US&sort_by=created_at.asc&page=1";
+    private String LANGUAGE_SORT = "&language=en-US&sort_by=created_at.asc&page=1";
+    private String PAGENUMBER = "&page=";
+    private int NUMEROPAGINA;
+    private String URL = URLDOMINIO+KEY+SESION_ID+LANGUAGE_SORT+PAGENUMBER;
     //https://api.themoviedb.org/3/account/{account_id}/favorite/movies?api_key=516adf1e1567058f8ecbf30bf2eb9378&session_id=c8e2bd462c246b141fd19ddba2e5f091f6f8aedb&language=en-US&sort_by=created_at.asc&page=1
     //https://api.themoviedb.org/3/list/15570?api_key=516adf1e1567058f8ecbf30bf2eb9378&language=en-US
     private RecyclerView recyclerView;
     private List<Movie> itemsList;
     private StoreAdapter mAdapter;
-
+    private boolean aptoParaCargar;
     public StoreFragment() {
         // Required empty public constructor
     }
@@ -78,14 +87,37 @@ public class StoreFragment extends Fragment {
         itemsList = new ArrayList<>();
         mAdapter = new StoreAdapter(getActivity(), itemsList);
 
-        RecyclerView.LayoutManager mLayoutManager = new GridLayoutManager(getActivity(), 3);
+        final GridLayoutManager mLayoutManager = new GridLayoutManager(getContext(), 3);
         recyclerView.setLayoutManager(mLayoutManager);
         recyclerView.addItemDecoration(new GridSpacingItemDecoration(2, dpToPx(8), true));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(mAdapter);
         recyclerView.setNestedScrollingEnabled(false);
+        //final GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 3);
 
-        fetchStoreItems();
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if (dy > 0) {
+                    int visibleItemCount = mLayoutManager.getChildCount();
+                    int totalItemCount = mLayoutManager.getItemCount();
+                    int pastVisibleItems = mLayoutManager.findFirstVisibleItemPosition();
+
+                    if (aptoParaCargar) {
+                        if ((visibleItemCount + pastVisibleItems) >= totalItemCount) {
+                            Log.i(TAG, " Llegamos al final.");
+
+                            aptoParaCargar = false;
+                            NUMEROPAGINA += 1;
+                            fetchStoreItems(NUMEROPAGINA);
+                        }
+                    }
+                }
+            }
+        });
+        NUMEROPAGINA=1;
+        fetchStoreItems(NUMEROPAGINA);
 
         return view;
     }
@@ -102,14 +134,15 @@ public class StoreFragment extends Fragment {
     /**
      * fetching shopping item by making http call
      */
-    private void fetchStoreItems() {
+    private void fetchStoreItems(int NUMEROPAGINA) {
         itemsList.clear();
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET,
-                URL2, (String) null,
+                URL+NUMEROPAGINA, (String) null,
                 new Response.Listener<JSONObject>() {
 
                     @Override
                     public void onResponse(JSONObject response) {
+                        aptoParaCargar = true;
                         JSONArray jRoutes = null;
                         if (response == null) {
                             Toast.makeText(getActivity(), "Couldn't fetch the store items! Pleas try again.", Toast.LENGTH_LONG).show();
@@ -239,9 +272,21 @@ public class StoreFragment extends Fragment {
             holder.name.setText(movie.getTitle());
             holder.price.setText(movie.getPrice());
 
+            RequestOptions requestOptions = new RequestOptions()
+                    .fitCenter()
+                    .placeholder(R.drawable.film_reel)
+                    .centerInside()
+                    .error(R.drawable.cinema_filled_error)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .priority(Priority.HIGH)
+                    .dontAnimate()
+                    .dontTransform();
+
             Glide.with(context)
                     .load(movie.getImage())
+                    .apply(requestOptions)
                     .into(holder.thumbnail);
+
         }
 
         @Override

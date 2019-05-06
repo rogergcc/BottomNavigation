@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
         layoutParams.setBehavior(new BottomNavigationBehavior());
 
         // load the store fragment by default
-        toolbar.setTitle("Shop");
+        toolbar.setTitle("Movies");
         loadFragment(new StoreFragment());
     }
 
@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
             Fragment fragment;
             switch (item.getItemId()) {
                 case R.id.navigation_shop:
-                    toolbar.setTitle("Shop");
+                    toolbar.setTitle("Movies");
                     fragment = new StoreFragment();
                     loadFragment(fragment);
                     return true;
