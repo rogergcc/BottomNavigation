@@ -85,6 +85,12 @@ public class StoreFragment extends Fragment {
 
         recyclerView = view.findViewById(R.id.recycler_view);
         itemsList = new ArrayList<>();
+
+        for (int i = 1; i <= 3; i++) {
+            fetchStoreItems(i);
+        }
+
+
         mAdapter = new StoreAdapter(getActivity(), itemsList);
 
         final GridLayoutManager mLayoutManager = new GridLayoutManager(getContext(), 3);
@@ -93,28 +99,28 @@ public class StoreFragment extends Fragment {
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(mAdapter);
         recyclerView.setHasFixedSize(true);
-        //recyclerView.setNestedScrollingEnabled(false);
+        recyclerView.setNestedScrollingEnabled(false);
         //final GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 3);
 
-        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-
-                if (!recyclerView.canScrollVertically(1)) {
-
-                    if (aptoParaCargar) {
-
-                        aptoParaCargar=false;
-                        NUMEROPAGINA++;
-                        fetchStoreItems(NUMEROPAGINA);
-                    }
-
-                }
-            }
-        });
+//        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+//            @Override
+//            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+//                super.onScrollStateChanged(recyclerView, newState);
+//
+//                if (!recyclerView.canScrollVertically(1)) {
+//
+//                    if (aptoParaCargar) {
+//
+//                        aptoParaCargar=false;
+//                        NUMEROPAGINA++;
+//                        fetchStoreItems(NUMEROPAGINA);
+//                    }
+//
+//                }
+//            }
+//        });
         NUMEROPAGINA=1;
-        fetchStoreItems(NUMEROPAGINA);
+
 
         return view;
     }
