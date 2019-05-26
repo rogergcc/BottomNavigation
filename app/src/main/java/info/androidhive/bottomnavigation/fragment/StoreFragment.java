@@ -85,8 +85,8 @@ public class StoreFragment extends Fragment {
 
         recyclerView = view.findViewById(R.id.recycler_view);
         itemsList = new ArrayList<>();
-
-        for (int i = 1; i <= 3; i++) {
+        Log.d(getContext().toString(),"URL "+ URL);
+        for (int i = 1; i <= 5; i++) {
             fetchStoreItems(i);
         }
 
@@ -138,9 +138,11 @@ public class StoreFragment extends Fragment {
      * fetching shopping item by making http call
      */
     private void fetchStoreItems(int NUMEROPAGINA) {
+
         //itemsList.clear();
+
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET,
-                URL+NUMEROPAGINA, (String) null,
+                URL+NUMEROPAGINA,null,
                 new Response.Listener<JSONObject>() {
 
                     @Override
