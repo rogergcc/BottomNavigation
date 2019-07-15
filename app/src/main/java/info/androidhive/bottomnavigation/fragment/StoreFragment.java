@@ -1,11 +1,15 @@
 package info.androidhive.bottomnavigation.fragment;
 
 
+import android.app.ActionBar;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -17,6 +21,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -40,9 +45,10 @@ import java.util.List;
 import info.androidhive.bottomnavigation.Movie;
 import info.androidhive.bottomnavigation.app.MyApplication;
 import info.androidhive.bottomnavigation.R;
+import info.androidhive.bottomnavigation.utils.RecyclerViewUtils;
 
 public class StoreFragment extends Fragment {
-
+    private RecyclerViewUtils.ShowHideToolbarOnScrollingListener showHideToolbarListener;
     private static final String TAG = StoreFragment.class.getSimpleName();
 
     // url to fetch shopping items
@@ -61,6 +67,10 @@ public class StoreFragment extends Fragment {
     private List<Movie> itemsList;
     private StoreAdapter mAdapter;
     private boolean aptoParaCargar;
+
+    private ProgressDialog pd;
+    private static int y;
+
     public StoreFragment() {
         // Required empty public constructor
     }
@@ -77,13 +87,59 @@ public class StoreFragment extends Fragment {
         super.onCreate(savedInstanceState);
     }
 
+
+    public abstract class HidingScrollListener extends RecyclerView.OnScrollListener {
+        private static final int HIDE_THRESHOLD = 20;
+        private int scrolledDistance = 0;
+        private boolean controlsVisible = true;
+
+        @Override
+        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+            super.onScrolled(recyclerView, dx, dy);
+
+            if (scrolledDistance > HIDE_THRESHOLD && controlsVisible) {
+                onHide();
+                controlsVisible = false;
+                scrolledDistance = 0;
+            } else if (scrolledDistance < -HIDE_THRESHOLD && !controlsVisible) {
+                onShow();
+                controlsVisible = true;
+                scrolledDistance = 0;
+            }
+
+            if((controlsVisible && dy>0) || (!controlsVisible && dy<0)) {
+                scrolledDistance += dy;
+            }
+        }
+
+        public abstract void onHide();
+        public abstract void onShow();
+
+    }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_store, container, false);
+//        getActivity().setTitle("Peliculitas");
+//        getActivity().getSupportActionBar().setTitle("Peliculitas");
+        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Peliculas");
+        android.support.v7.app.ActionBar actionAppCompatActivity = ((AppCompatActivity) getActivity()).getSupportActionBar();
+
+//        actionAppCompatActivity.setTitle("OTRO");
+//        actionAppCompatActivity.hide();
+
+//        ((AppCompatActivity) getActivity()).getSupportActionBar().setCustomView(View.GONE);
+
+        pd = new ProgressDialog(getContext());
+
+        pd.setTitle("Obteniendo Registros");
+        pd.setMessage("Recibiendo Datos");
+        pd.setCancelable(false);
+        pd.show();
 
         recyclerView = view.findViewById(R.id.recycler_view);
+
         itemsList = new ArrayList<>();
         Log.d(getContext().toString(),"URL "+ URL);
         for (int i = 1; i <= 5; i++) {
@@ -98,8 +154,43 @@ public class StoreFragment extends Fragment {
         recyclerView.addItemDecoration(new GridSpacingItemDecoration(2, dpToPx(8), true));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(mAdapter);
+
+
         recyclerView.setHasFixedSize(true);
         recyclerView.setNestedScrollingEnabled(false);
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+//                if(recyclerView.SCROLL_STATE_DRAGGING==newState){
+//                    //fragProductLl.setVisibility(View.GONE);
+//                }
+                if(recyclerView.SCROLL_STATE_IDLE==newState){
+                    // fragProductLl.setVisibility(View.VISIBLE);
+                    if(y<=0){
+                        ((AppCompatActivity) getActivity()).getSupportActionBar().show();
+                    }
+                    else{
+                        y=0;
+                        ((AppCompatActivity) getActivity()).getSupportActionBar().hide();
+                    }
+                }
+
+            }
+
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                y=dy;
+//                if (dy <= 0) {
+//                    // Scrolling up
+//                    ((AppCompatActivity) getActivity()).getSupportActionBar().hide();
+//                } else if(dy>0){
+//                    ((AppCompatActivity) getActivity()).getSupportActionBar().show();
+//                    // Scrolling down
+//                }
+            }
+        });
         //final GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 3);
 
 //        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -147,6 +238,7 @@ public class StoreFragment extends Fragment {
 
                     @Override
                     public void onResponse(JSONObject response) {
+                        pd.dismiss();
                         aptoParaCargar = true;
                         JSONArray jRoutes = null;
                         if (response == null) {
@@ -184,6 +276,7 @@ public class StoreFragment extends Fragment {
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                pd.dismiss();
                 // error in getting json
                 Log.e(TAG, "Error: " + error.getMessage());
                 Toast.makeText(getActivity(), "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();

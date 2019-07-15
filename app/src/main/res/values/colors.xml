@@ -3,5 +3,16 @@
     <color name="colorPrimary">#323232</color>
     <color name="colorPrimaryDark">#484848</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="colorRed">#F44336</color>
     <color name="bgBottomNavigation">#F87652</color>
+
+
+    <color name="Gama_1">#009D84</color>
+    <color name="Gama_2">#39BCA4</color>
+    <color name="Gama_3">#F1EEDA</color>
+    <color name="Gama_4">#4C565E</color>
+    <color name="Gama_5">#E75244</color>
+    <color name="colorstore">#f1f5f7</color>
+    <color name="white">#FFF</color>
+
 </resources>
